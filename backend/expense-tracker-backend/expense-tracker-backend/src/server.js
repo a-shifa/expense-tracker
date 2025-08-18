@@ -15,11 +15,17 @@ const app = express();
 
 // Middleware
 app.use(helmet());
-// --- CORS SETTINGS: Allow frontend at http://localhost:5173 ---
+
+// --- CORS SETTINGS: Allow local and deployed frontend ---
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://your-vercel-frontend-url.vercel.app"   // <-- REPLACE with your actual Vercel URL!
+];
 app.use(cors({
-  origin: "http://localhost:5173",
+  origin: allowedOrigins,
   credentials: true
 }));
+
 app.use(express.json());
 app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
 
@@ -37,8 +43,7 @@ app.use(notFound);
 app.use(errorHandler);
 
 // --- PORT SETTINGS ---
-const PORT = 8001;
-
+const PORT = process.env.PORT || 8001;
 const MONGO_URI = process.env.MONGO_URI;
 
 if (!MONGO_URI) {
