@@ -19,15 +19,25 @@ app.use(helmet());
 // --- CORS SETTINGS: Allow local and deployed frontend ---
 const allowedOrigins = [
   "http://localhost:5173",
-  "https://your-vercel-frontend-url.vercel.app"   // <-- REPLACE with your actual Vercel URL!
+  "https://expense-tracker-tau-53.vercel.app"   // <-- This is YOUR deployed Vercel frontend
 ];
-app.use(cors({
-  origin: allowedOrigins,
-  credentials: true
-}));
+app.use(
+  cors({
+    origin: allowedOrigins,
+    credentials: true
+  })
+);
 
 app.use(express.json());
 app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
+
+// --- LOG ALL POST REQUESTS (Debugging) ---
+app.use((req, res, next) => {
+  if (req.method === "POST") {
+    console.log(`Received POST request on ${req.originalUrl}`);
+  }
+  next();
+});
 
 // Healthcheck
 app.get("/", (req, res) => {
