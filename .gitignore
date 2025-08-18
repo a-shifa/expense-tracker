@@ -1,0 +1,33 @@
+# Ignore all node_modules folders
+node_modules/
+*/node_modules/
+
+# Ignore environment variables
+.env
+finance/.env
+backend/.env
+
+# Ignore build output (Vite, React, etc)
+dist/
+build/
+finance/dist/
+finance/build/
+backend/dist/
+backend/build/
+
+# Ignore log files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Ignore local VSCode settings (optional)
+.vscode/
+
+# Ignore Mac/Windows system files (optional)
+.DS_Store
+Thumbs.db
+
+# Ignore other files you never want in git
+*.local
+*.env.local
