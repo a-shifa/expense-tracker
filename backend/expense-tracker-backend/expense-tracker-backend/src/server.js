@@ -39,6 +39,7 @@ app.use((req, res, next) => {
   next();
 });
 
+
 // Healthcheck
 app.get("/", (req, res) => {
   res.json({ status: "ok", message: "Expense Tracker API running" });
