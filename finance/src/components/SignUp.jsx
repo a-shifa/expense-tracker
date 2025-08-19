@@ -1,15 +1,18 @@
 import { useState } from "react";
+
 export default function SignUp({ onSignUp, toSignIn }) {
   const [form, setForm] = useState({ name: "", email: "", password: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const API_URL = import.meta.env.VITE_API_URL;
 
   async function handleSubmit(e) {
     e.preventDefault();
     setLoading(true);
     setError("");
     try {
-      const response = await fetch("http://localhost:8001/api/auth/register", {
+      const response = await fetch(`${API_URL}/api/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form)
@@ -27,6 +30,7 @@ export default function SignUp({ onSignUp, toSignIn }) {
       setLoading(false);
     }
   }
+
   return (
     <div className="auth-bg fade-in">
       <form className="signin-box" onSubmit={handleSubmit}>

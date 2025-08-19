@@ -5,12 +5,14 @@ export default function SignIn({ onSignIn, toSignUp }) {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const API_URL = import.meta.env.VITE_API_URL;
+
   async function handleSubmit(e) {
     e.preventDefault();
     setLoading(true);
     setError("");
     try {
-      const response = await fetch("http://localhost:8001/api/auth/login", {
+      const response = await fetch(`${API_URL}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form)
@@ -33,7 +35,7 @@ export default function SignIn({ onSignIn, toSignUp }) {
     if (!form.email) return setError("Enter your email to delete account.");
     setLoading(true);
     try {
-      await fetch("http://localhost:8001/api/auth/delete", {
+      await fetch(`${API_URL}/api/auth/delete`, {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: form.email, password: form.password })
@@ -45,7 +47,7 @@ export default function SignIn({ onSignIn, toSignUp }) {
     setLoading(false);
   }
 
-  function handleForgetPassword() {
+  async function handleForgetPassword() {
     if (!form.email) return setError("Enter your email to reset.");
     alert("Password reset feature coming soon. Contact admin to reset.");
   }
@@ -82,24 +84,23 @@ export default function SignIn({ onSignIn, toSignUp }) {
         <button className="add-btn" type="submit" disabled={loading}>
           {loading ? "Signing in..." : "Sign In"}
         </button>
-        <div style={{ display: "flex", justifyContent: "center", gap: 12, marginTop: 12 }}>
-          <button
-            type="button"
-            className="add-btn"
-            style={{ background: "#FFE8CD", color: "#222" }}
-            onClick={handleForgetPassword}
-          >
-            Forgot Password
-          </button>
-          <button
-            type="button"
-            className="cancel-btn"
-            onClick={handleDeleteUser}
-          >
-            Delete Account
-          </button>
-        </div>
-        <div style={{ marginTop: "18px", textAlign: "center" }}>
+        <button
+          type="button"
+          className="add-btn"
+          style={{ marginTop: "10px", background: "#FFE8CD" }}
+          onClick={handleForgetPassword}
+        >
+          Forget Password
+        </button>
+        <button
+          type="button"
+          className="cancel-btn"
+          style={{ marginTop: "10px" }}
+          onClick={handleDeleteUser}
+        >
+          Delete Account
+        </button>
+        <div style={{ marginTop: "12px", textAlign: "center" }}>
           <span
             style={{ color: "#2d79c7", cursor: "pointer", fontWeight: "600" }}
             onClick={toSignUp}

@@ -1,11 +1,25 @@
 import SummaryCards from "./SummaryCards";
 import RecentHistorySide from "./RecentHistorySide";
 import TransactionsChart from "./TransactionsChart";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
-export default function Dashboard({ transactions = [], addTransaction }) {
+export default function Dashboard() {
+  const [transactions, setTransactions] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState({ type: "income", amount: "", label: "" });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const API_URL = import.meta.env.VITE_API_URL;
+
+  useEffect(() => {
+    setLoading(true);
+    fetch(`${API_URL}/api/transactions`)
+      .then(res => res.json())
+      .then(data => setTransactions(data))
+      .catch(() => setError("Unable to fetch transactions."))
+      .finally(() => setLoading(false));
+  }, [API_URL]);
 
   const income = transactions
     .filter(t => t.type === "income")
@@ -19,13 +33,26 @@ export default function Dashboard({ transactions = [], addTransaction }) {
 
   function submit() {
     if (!form.amount || !form.label) return;
-    addTransaction({ ...form, amount: Number(form.amount) });
-    setShowModal(false);
-    setForm({ type: "income", amount: "", label: "" });
+    setLoading(true);
+    fetch(`${API_URL}/api/transactions`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...form, amount: Number(form.amount) })
+    })
+      .then(res => res.json())
+      .then(newTx => {
+        setTransactions(tx => [...tx, newTx]);
+        setShowModal(false);
+        setForm({ type: "income", amount: "", label: "" });
+      })
+      .catch(() => setError("Unable to add transaction."))
+      .finally(() => setLoading(false));
   }
 
   return (
     <div className="dashboard-content">
+      {loading && <div className="info">Loading...</div>}
+      {error && <div className="error">{error}</div>}
       <div className="dashboard-maincol">
         <div className="dashboard-top">
           <div className="chart-box">
