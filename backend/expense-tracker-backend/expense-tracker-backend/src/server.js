@@ -13,21 +13,26 @@ dotenv.config();
 
 const app = express();
 
-// Middleware
-app.use(helmet());
-
-// --- CORS SETTINGS: Allow local and deployed frontend ---
+// --- CORS SETTINGS: MUST come BEFORE everything! ---
 const allowedOrigins = [
   "http://localhost:5173",
-  "https://expense-tracker-tau-53.vercel.app"   // <-- This is YOUR deployed Vercel frontend
+  "https://expense-tracker-tau-53.vercel.app"
 ];
+
 app.use(
   cors({
-    origin: allowedOrigins,
+    origin: function (origin, callback) {
+      // Allow all non-browser or non-origin requests (like Postman, curl)
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.includes(origin)) return callback(null, true);
+      return callback(new Error("Not allowed by CORS: " + origin));
+    },
     credentials: true
   })
 );
 
+// MUST come after CORS
+app.use(helmet());
 app.use(express.json());
 app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
 
@@ -38,7 +43,6 @@ app.use((req, res, next) => {
   }
   next();
 });
-
 
 // Healthcheck
 app.get("/", (req, res) => {
@@ -64,4 +68,4 @@ if (!MONGO_URI) {
 
 connectDB(MONGO_URI).then(() => {
   app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-}); 
+});
