@@ -16,7 +16,7 @@ const app = express();
 // --- CORS SETTINGS: MUST come BEFORE everything! ---
 const allowedOrigins = [
   "http://localhost:5173",
-  "https://expense-tracker-tau-53.vercel.app"
+  "https://expense-tracker-six-tau-53.vercel.app"
 ];
 
 app.use(
