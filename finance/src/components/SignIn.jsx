@@ -32,15 +32,21 @@ export default function SignIn({ onSignIn, toSignUp }) {
   }
 
   async function handleDeleteUser() {
-    if (!form.email) return setError("Enter your email to delete account.");
+    if (!form.email || !form.password) return setError("Enter your email and password to delete account.");
     setLoading(true);
+    setError("");
     try {
-      await fetch(`${API_URL}/api/auth/delete`, {
+      const response = await fetch(`${API_URL}/api/auth/delete`, {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: form.email, password: form.password })
       });
-      setError("Account deleted. You can register again.");
+      const result = await response.json();
+      if (response.ok) {
+        setError("Account deleted. You can register again.");
+      } else {
+        setError(result.message || "Unable to delete account.");
+      }
     } catch {
       setError("Unable to delete account.");
     }
@@ -49,7 +55,20 @@ export default function SignIn({ onSignIn, toSignUp }) {
 
   async function handleForgetPassword() {
     if (!form.email) return setError("Enter your email to reset.");
-    alert("Password reset feature coming soon. Contact admin to reset.");
+    setLoading(true);
+    setError("");
+    try {
+      const response = await fetch(`${API_URL}/api/auth/forgot-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: form.email })
+      });
+      const result = await response.json();
+      setError(result.message || "Reset password link sent.");
+    } catch {
+      setError("Error sending password reset.");
+    }
+    setLoading(false);
   }
 
   return (
@@ -89,6 +108,7 @@ export default function SignIn({ onSignIn, toSignUp }) {
           className="add-btn"
           style={{ marginTop: "10px", background: "#FFE8CD" }}
           onClick={handleForgetPassword}
+          disabled={loading}
         >
           Forget Password
         </button>
@@ -97,6 +117,7 @@ export default function SignIn({ onSignIn, toSignUp }) {
           className="cancel-btn"
           style={{ marginTop: "10px" }}
           onClick={handleDeleteUser}
+          disabled={loading}
         >
           Delete Account
         </button>

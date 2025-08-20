@@ -58,10 +58,10 @@ const PORT = process.env.PORT || 8001;
 const MONGO_URI = process.env.MONGO_URI;
 
 if (!MONGO_URI) {
-  console.error("❌ Missing MONGO_URI in environment. Create a .env file or set the variable.");
+  console.error(" Missing MONGO_URI in environment. Create a .env file or set the variable.");
   process.exit(1);
 }
 
 connectDB(MONGO_URI).then(() => {
   app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-});
+}); 

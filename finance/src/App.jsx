@@ -8,8 +8,10 @@ import SignUp from "./components/SignUp";
 import Dashboard from "./components/Dashboard";
 import "./index.css";
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 function getAvatar(name = "guest") {
-  return` https://avatars.dicebear.com/api/adventurer/${encodeURIComponent(name)}.svg`;
+  return `https://avatars.dicebear.com/api/adventurer/${encodeURIComponent(name)}.svg`;
 }
 
 export default function App() {
@@ -21,33 +23,31 @@ export default function App() {
   const [notifications, setNotifications] = useState([]);
   const [showNotification, setShowNotification] = useState(false);
 
-  // When user logs in, load their transactions from localStorage
-  useEffect(() => {
-    if (user && user.email) {
-      const saved = localStorage.getItem(`transactions_${user.email}`);
-      setTransactions(saved ? JSON.parse(saved) : []);
-    } else {
-      setTransactions([]);
-    }
-  }, [user]);
-
-  // When transactions change, save them in localStorage for the current user
-  useEffect(() => {
-    if (user && user.email) {
-      localStorage.setItem(`transactions_${user.email}`, JSON.stringify(transactions));
-    }
-  }, [transactions, user]);
-
+  // Load user info from backend if JWT token exists
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
-      fetch("http://localhost:8001/api/auth/me", {
-        headers: { Authorization:` Bearer ${token}` }
+      fetch(`${API_URL}/api/auth/me`, {
+        headers: { Authorization: `Bearer ${token} `}
       })
         .then(res => res.ok ? res.json() : null)
         .then(data => { if (data) setUser(data); });
     }
   }, []);
+
+  // Load transactions from backend after login
+  useEffect(() => {
+    if (user) {
+      const token = localStorage.getItem("token");
+      fetch(`${API_URL}/api/transactions`, {
+        headers: { Authorization:` Bearer ${token}` }
+      })
+        .then(res => res.ok ? res.json() : { items: [] })
+        .then(data => setTransactions(data.items || []));
+    } else {
+      setTransactions([]);
+    }
+  }, [user]);
 
   function handleSignIn(u, token) {
     setUser(u);
@@ -70,13 +70,31 @@ export default function App() {
   function handleSignOut() {
     localStorage.removeItem("token");
     setUser(null);
-    setTransactions([]); // clear UI when logging out
+    setTransactions([]);
     setMode("signin");
   }
 
-  function addTransaction(txn) {
-    setTransactions(list => [txn, ...list]);
-    handleAddNotification("Transaction added!");
+  async function addTransaction(txn) {
+    const token = localStorage.getItem("token");
+    try {
+      const response = await fetch(`${API_URL}/api/transactions`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(txn)
+      });
+      const newTxn = await response.json();
+      if (response.ok) {
+        setTransactions(list => [newTxn, ...list]);
+        handleAddNotification("Transaction added!");
+      } else {
+        handleAddNotification(newTxn.message || "Could not add transaction");
+      }
+    } catch {
+      handleAddNotification("Server error while adding transaction");
+    }
   }
 
   function handleAddNotification(msg) {

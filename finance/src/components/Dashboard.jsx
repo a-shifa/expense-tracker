@@ -1,26 +1,15 @@
 import SummaryCards from "./SummaryCards";
 import RecentHistorySide from "./RecentHistorySide";
 import TransactionsChart from "./TransactionsChart";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
-export default function Dashboard() {
-  const [transactions, setTransactions] = useState([]);
+export default function Dashboard({ transactions, addTransaction }) {
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState({ type: "income", amount: "", label: "" });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const API_URL = import.meta.env.VITE_API_URL;
-
-  useEffect(() => {
-    setLoading(true);
-    fetch(`${API_URL}/api/transactions`)
-      .then(res => res.json())
-      .then(data => setTransactions(data))
-      .catch(() => setError("Unable to fetch transactions."))
-      .finally(() => setLoading(false));
-  }, [API_URL]);
-
+  // Calculate totals—these use backend data passed in
   const income = transactions
     .filter(t => t.type === "income")
     .reduce((s, t) => s + (t.amount || 0), 0);
@@ -31,27 +20,31 @@ export default function Dashboard() {
 
   const balance = income - expenses;
 
-  function submit() {
-    if (!form.amount || !form.label) return;
+  // Submit transaction via the prop, using backend
+  function handleSubmit() {
+    if (!form.amount || !form.label) {
+      setError("Please fill all fields.");
+      return;
+    }
     setLoading(true);
-    fetch(`${API_URL}/api/transactions`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...form, amount: Number(form.amount) })
-    })
-      .then(res => res.json())
-      .then(newTx => {
-        setTransactions(tx => [...tx, newTx]);
-        setShowModal(false);
-        setForm({ type: "income", amount: "", label: "" });
-      })
-      .catch(() => setError("Unable to add transaction."))
-      .finally(() => setLoading(false));
+    setError("");
+    addTransaction(
+      {
+        type: form.type,
+        amount: Number(form.amount),
+        label: form.label,
+        category: "General", // optional, if backend uses
+        date: new Date().toISOString(),
+        note: ""
+      }
+    );
+    setShowModal(false);
+    setForm({ type: "income", amount: "", label: "" });
+    setLoading(false);
   }
 
   return (
     <div className="dashboard-content">
-      {loading && <div className="info">Loading...</div>}
       {error && <div className="error">{error}</div>}
       <div className="dashboard-maincol">
         <div className="dashboard-top">
@@ -100,7 +93,10 @@ export default function Dashboard() {
                 onChange={e => setForm(f => ({ ...f, label: e.target.value }))}
               />
             </label>
-            <button className="add-btn" onClick={submit}>Add</button>
+            {error && <div className="error">{error}</div>}
+            <button className="add-btn" onClick={handleSubmit} disabled={loading}>
+              {loading ? "Adding..." : "Add"}
+            </button>
             <button className="cancel-btn" onClick={() => setShowModal(false)}>Cancel</button>
           </div>
         </div>
